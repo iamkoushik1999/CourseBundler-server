@@ -57,6 +57,9 @@ export const logout = catchAsyncError(async (req, res, next) => {
     .status(200)
     .cookie("token", null, {
       expires: new Date(Date.now()),
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
     })
     .json({
       success: true,
@@ -310,7 +313,7 @@ User.watch().on("change", async () => {
 
   const subscription = await User.find({ "subscription.status": "active" });
 
-  stats[0].users = await User.coundDocument();
+  stats[0].users = await User.countDocuments();
   stats[0].subscriptions = subscription.length;
   stats[0].createdAt = new Date(Date.now());
 
