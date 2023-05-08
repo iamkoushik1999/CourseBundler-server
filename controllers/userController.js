@@ -1,6 +1,7 @@
 import { catchAsyncError } from "../middleware/catchAsyncError.js";
 import { User } from "../models/UserModel.js";
 import { Course } from "../models/CourseModel.js";
+import { Stats } from "../models/StatsModel.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { sendToken } from "../utils/sendToken.js";
@@ -301,4 +302,17 @@ export const deleteUser = catchAsyncError(async (req, res, next) => {
     success: true,
     message: `${user.name} has been Deleted Successfully`,
   });
+});
+
+// User call when Change
+User.watch().on("change", async () => {
+  const stats = await Stats.find({}).sort({ createdAt: "desc" }).limit(1);
+
+  const subscription = await User.find({ "subscription.status": "active" });
+
+  stats[0].users = await User.coundDocument();
+  stats[0].subscriptions = subscription.length;
+  stats[0].createdAt = new Date(Date.now());
+
+  await stats[0].save();
 });
