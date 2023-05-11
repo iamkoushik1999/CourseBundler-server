@@ -27,13 +27,13 @@ export const buySubscription = catchAsyncError(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    subscriptionID: subscription.id,
+    subscriptionId: subscription.id,
   });
 });
 
 // Payment Verification and Save reference in Database
 export const paymentVerification = catchAsyncError(async (req, res, next) => {
-  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+  const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } =
     req.body;
 
   const user = await User.findById(req.user._id);
@@ -46,12 +46,13 @@ export const paymentVerification = catchAsyncError(async (req, res, next) => {
     .digest("hex");
 
   const isAuthentic = generated_signature === razorpay_signature;
-  if (!isAuthentic) res.redirect(`${process.env.FRONTEND_URL}/paymentfail`);
+  if (!isAuthentic)
+    return res.redirect(`${process.env.FRONTEND_URL}/paymentfail`);
 
-  // Database coms here
+  // Database comes here
   await Payment.create({
     razorpay_payment_id,
-    razorpay_order_id,
+    razorpay_subscription_id,
     razorpay_signature,
   });
 
@@ -60,7 +61,7 @@ export const paymentVerification = catchAsyncError(async (req, res, next) => {
   await user.save();
 
   res.redirect(
-    `${process.env.FRONTEND_URL}/paymentsuccess?reference${razorpay_payment_id}`
+    `${process.env.FRONTEND_URL}/paymentsuccess?reference=${razorpay_payment_id}`
   );
 });
 
@@ -68,7 +69,7 @@ export const paymentVerification = catchAsyncError(async (req, res, next) => {
 export const getRazorPayKey = catchAsyncError(async (req, res, next) => {
   res.status(200).json({
     success: true,
-    Key: process.env.RAZORPAY_API_KEY,
+    key: process.env.RAZORPAY_API_KEY,
   });
 });
 
@@ -82,7 +83,7 @@ export const cancelSubscription = catchAsyncError(async (req, res, next) => {
   await instance.subscriptions.cancel(subscriptionId);
 
   const payment = await Payment.findOne({
-    razorpay_order_id: subscriptionId,
+    razorpay_subscription_id: subscriptionId,
   });
 
   const gap = Date.now() - payment.createdAt;
