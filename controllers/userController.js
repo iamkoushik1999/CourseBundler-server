@@ -1,13 +1,13 @@
 import { catchAsyncError } from "../middleware/catchAsyncError.js";
 import { User } from "../models/UserModel.js";
 import { Course } from "../models/CourseModel.js";
-import { Stats } from "../models/StatsModel.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { sendToken } from "../utils/sendToken.js";
 import getDataUri from "../utils/datauri.js";
 import crypto from "crypto";
 import cloudinary from "cloudinary";
+import { Stats } from "../models/StatsModel.js";
 
 // To Register a new user
 export const register = catchAsyncError(async (req, res, next) => {
@@ -33,7 +33,7 @@ export const register = catchAsyncError(async (req, res, next) => {
     },
   });
 
-  sendToken(res, user, "Registered Successfully", 201);
+  sendToken(res, user, `${user.name}: Registered Successfully 😇`, 201);
 });
 
 // Login
@@ -48,7 +48,7 @@ export const login = catchAsyncError(async (req, res, next) => {
   const isMatch = await user.comparePassword(password);
   if (!isMatch) return next(new ErrorHandler("Incorrent Credentials", 401));
 
-  sendToken(res, user, `Welcome ${user.name}`, 200);
+  sendToken(res, user, `Welcome Back ${user.name} 🙏`, 200);
 });
 
 // Logout
@@ -63,13 +63,13 @@ export const logout = catchAsyncError(async (req, res, next) => {
     })
     .json({
       success: true,
-      message: "Logged Out",
+      message: `Logged Out Successfully👋`,
     });
 });
 
 // Get My Profile
 export const getMyProfile = catchAsyncError(async (req, res, next) => {
-  const user = await User.findById(req.user._id).lean();
+  const user = await User.findById(req.user._id);
   res.status(200).json({
     success: true,
     user,
@@ -93,7 +93,7 @@ export const deleteMyProfile = catchAsyncError(async (req, res, next) => {
     })
     .json({
       success: true,
-      message: `${user.name} your profile has been Deleted Successfully`,
+      message: `${user.name} Your Profile Has Been Deleted Successfully`,
     });
 });
 
@@ -101,19 +101,19 @@ export const deleteMyProfile = catchAsyncError(async (req, res, next) => {
 export const changePassword = catchAsyncError(async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword)
-    return next(new ErrorHandler("Please enter all fields ", 400));
+    return next(new ErrorHandler("Please enter all fields 👎", 400));
 
   const user = await User.findById(req.user._id).select("+password");
 
   const isMatch = await user.comparePassword(oldPassword);
-  if (!isMatch) return next(new ErrorHandler("Incorrent Old Password", 401));
+  if (!isMatch) return next(new ErrorHandler("Incorrent Old Password 👎", 401));
 
   user.password = newPassword;
   await user.save();
 
   res.status(200).json({
     success: true,
-    message: "Password Changed Successfully",
+    message: `${user.name}, Your Password Changed Successfully 🙈`,
   });
 });
 
@@ -130,7 +130,7 @@ export const updateProfile = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Profile Updated Successfully",
+    message: `${user.name}, Your Profile Updated Successfully 👍`,
     user,
   });
 });
@@ -155,7 +155,7 @@ export const updateProfilePicture = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: `${user.name} your Profile Picture Updated Successfully`,
+    message: `${user.name}, Your Profile Picture Updated Successfully 👍`,
   });
 });
 
@@ -212,7 +212,7 @@ export const resetPassword = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Password Changed Successfully",
+    message: `Password Changed Successfully 🙈`,
   });
 });
 
@@ -238,7 +238,7 @@ export const addToPlaylist = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Added to Playlist",
+    message: "Added to Playlist 👍",
   });
 });
 
